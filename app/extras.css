@@ -1,0 +1,159 @@
+/* ───────── Atmósfera: aurora, brasas, grano, progreso y riel de actos ───────── */
+.aurora {
+  --au-1: rgb(255, 79, 163); --au-2: rgb(91, 124, 255); --au-3: rgb(216, 59, 210);
+  position: fixed; inset: 0; z-index: -2; overflow: hidden; pointer-events: none;
+}
+.aurora i { position: absolute; width: 62vmax; height: 62vmax; border-radius: 50%; filter: blur(90px); opacity: 0.4; mix-blend-mode: screen; will-change: transform; }
+.aurora i:nth-child(1) { left: -18vmax; top: -14vmax; background: radial-gradient(circle, var(--au-1), transparent 66%); }
+.aurora i:nth-child(2) { right: -20vmax; top: 18vh; background: radial-gradient(circle, var(--au-2), transparent 66%); }
+.aurora i:nth-child(3) { left: 18vw; bottom: -26vmax; background: radial-gradient(circle, var(--au-3), transparent 66%); }
+
+.embers { position: fixed; inset: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
+
+.grain {
+  position: fixed; inset: 0; z-index: 45; pointer-events: none; opacity: 0.09; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+.progress { position: fixed; top: 0; left: 0; right: 0; height: 4px; z-index: 95; pointer-events: none; }
+.progress-fill { height: 100%; transform: scaleX(0); transform-origin: left center; background: var(--grad-hair); box-shadow: 0 0 16px var(--rose); }
+
+.rail {
+  position: fixed; right: clamp(8px, 1.6vw, 22px); top: 50%; translate: 0 -50%; z-index: 70;
+  list-style: none; margin: 0; padding: 0; display: grid; gap: 1.1rem; pointer-events: none;
+}
+.rail li { display: flex; align-items: center; justify-content: flex-end; gap: 0.7rem; }
+.rail span {
+  font-size: 0.72rem; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase; color: var(--mist);
+  opacity: 0; translate: 8px 0; transition: opacity 0.4s, translate 0.4s; text-shadow: 0 0 12px rgba(0, 0, 0, 0.6);
+}
+.rail i {
+  width: 10px; height: 10px; border-radius: 50%; border: 2px solid rgba(253, 240, 250, 0.55);
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.4s, box-shadow 0.4s, border-color 0.4s;
+}
+.rail li.on span { opacity: 1; translate: 0 0; }
+.rail li.on i { transform: scale(1.5); background: var(--rose); border-color: #fff; box-shadow: 0 0 14px 2px var(--rose); }
+@media (max-width: 760px) { .rail span { display: none; } }
+
+.grad-text { background: var(--grad-hair); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+/* ───────── Portada: orbes y nombre ───────── */
+.orb { position: absolute; border-radius: 50%; filter: blur(46px); pointer-events: none; opacity: 0.5; }
+.orb-a { width: 34vmin; height: 34vmin; left: 6%; top: 12%; background: radial-gradient(circle, var(--rose), transparent 70%); }
+.orb-b { width: 42vmin; height: 42vmin; right: 4%; bottom: 8%; background: radial-gradient(circle, var(--azure), transparent 70%); }
+.orb-c { width: 22vmin; height: 22vmin; left: 46%; top: 6%; background: radial-gradient(circle, var(--magenta), transparent 70%); }
+.hero-greet { color: var(--blush); text-shadow: 0 0 30px rgba(255, 79, 163, 0.55); }
+/* El brillo va en el contenedor: dentro de las máscaras de SplitText se recortaría en cajas. */
+.hero-name { text-shadow: none; filter: drop-shadow(0 0 28px rgba(255, 79, 163, 0.5)); font-size: clamp(3rem, 1rem + 7vw, 9rem); }
+.panther-img, .panther-svg { filter: drop-shadow(0 0 34px rgba(255, 79, 163, 0.5)) drop-shadow(0 20px 40px rgba(0, 0, 0, 0.5)); }
+
+/* ───────── Secciones: palabra fantasma y barra bajo el título ───────── */
+.section[data-ghost] { overflow-x: clip; }
+.section[data-ghost]::before {
+  content: attr(data-ghost); position: absolute; left: -1%; top: 6%; z-index: -1; pointer-events: none;
+  font-family: var(--font-display-stack); font-weight: 800; letter-spacing: -0.05em; line-height: 1; white-space: nowrap;
+  font-size: clamp(6rem, 22vw, 20rem); color: transparent; -webkit-text-stroke: 2px rgba(255, 124, 196, 0.16);
+  transform: translateY(var(--gy, 0%));
+}
+.section-title::after {
+  content: ""; display: block; width: min(220px, 46%); height: 6px; margin-top: 0.7rem; border-radius: 6px;
+  background: var(--grad-hair); transform: scaleX(var(--bar, 1)); transform-origin: left center;
+  box-shadow: 0 0 18px rgba(255, 79, 163, 0.65);
+}
+.tword { display: inline-block; }
+
+/* ───────── Actos (separadores a pantalla completa) ───────── */
+.act {
+  position: relative; isolation: isolate; min-height: 100svh; display: grid; place-items: center; overflow: hidden;
+  text-align: center; padding: var(--pad-y) var(--pad-x); color: var(--mist);
+}
+.act-curtain { position: absolute; inset: 0; z-index: -2; }
+.act[data-actn="1"] .act-curtain { background: radial-gradient(ellipse at 50% 115%, rgba(229, 23, 79, 0.55), transparent 60%), linear-gradient(180deg, #0c0620, #3a0830); }
+.act[data-actn="2"] .act-curtain { background: radial-gradient(circle at 50% 50%, rgba(91, 124, 255, 0.4), transparent 62%), linear-gradient(180deg, #080a3a, #1c2a8a); }
+.act[data-actn="3"] .act-curtain { background: radial-gradient(circle at 50% 100%, rgba(255, 168, 220, 0.6), transparent 62%), linear-gradient(180deg, #4a0f80, #d83bd2); }
+.act[data-actn="4"] .act-curtain { background: radial-gradient(circle at 50% 100%, #fff, #ffd9f1 22%, #ff7cc4 52%, #8a6cff 100%); }
+.act[data-actn="4"] { color: var(--ink); }
+
+.act-marquee { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; display: grid; align-content: space-between; padding: 7vh 0; }
+.act-row {
+  margin: 0; width: max-content; white-space: nowrap; font-family: var(--font-display-stack); font-weight: 800; letter-spacing: -0.02em;
+  font-size: clamp(3.4rem, 11vw, 10rem); line-height: 1; color: transparent; -webkit-text-stroke: 1.5px rgba(253, 240, 250, 0.22);
+}
+.act[data-actn="4"] .act-row { -webkit-text-stroke-color: rgba(18, 16, 58, 0.18); }
+
+.act-inner { position: relative; display: grid; justify-items: center; gap: clamp(0.8rem, 2vw, 1.4rem); max-width: 1100px; }
+.act-kicker { margin: 0; font-weight: 800; font-size: 0.95rem; letter-spacing: 0.4em; text-transform: uppercase; color: var(--glow); }
+.act[data-actn="4"] .act-kicker { color: var(--ink); }
+.act-roman { display: inline-block; font-family: var(--font-display-stack); font-size: 2.1em; letter-spacing: 0; vertical-align: middle; color: #fff; text-shadow: 0 0 24px var(--rose); }
+.act-shape { width: clamp(110px, 16vw, 190px); height: auto; overflow: visible; fill: none; stroke: var(--glow); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 14px rgba(255, 79, 163, 0.7)); }
+.act-morph { fill: var(--rose); fill-opacity: 0; stroke: #fff; }
+.act-ring { stroke: var(--lilac); }
+.act-sun { fill: #fff; stroke: none; filter: drop-shadow(0 0 22px #fff); }
+.act-rays line { stroke: #fff; stroke-width: 3.4; }
+.act-title {
+  margin: 0; font-family: var(--font-display-stack); font-weight: 800; letter-spacing: -0.04em; line-height: 0.98;
+  font-size: clamp(3rem, 1rem + 11vw, 11rem); overflow-wrap: anywhere; color: #fff;
+  filter: drop-shadow(0 0 30px rgba(255, 79, 163, 0.65)) drop-shadow(0 0 70px rgba(91, 124, 255, 0.45));
+}
+.act[data-actn="1"] .act-title { color: #ffd9e8; filter: drop-shadow(0 0 34px rgba(229, 23, 79, 0.95)); }
+.act[data-actn="4"] .act-title { color: var(--ink); filter: drop-shadow(0 0 40px rgba(255, 255, 255, 0.95)); }
+.act-sub { margin: 0; max-width: 40ch; font-size: clamp(1.1rem, 1rem + 0.7vw, 1.55rem); font-weight: 600; line-height: 1.5; }
+.act-hint { margin: 1.2rem 0 0; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; font-size: 0.8rem; opacity: 0.85; }
+.act-hint i { display: inline-block; font-style: normal; margin-left: 0.4rem; }
+
+/* ───────── Tarot: brillo holográfico ───────── */
+.tarot-card { transform-style: preserve-3d; will-change: transform; }
+.card-sheen {
+  position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity 0.3s; mix-blend-mode: screen;
+  background:
+    radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, 0.4), transparent 46%),
+    linear-gradient(115deg, transparent 28%, rgba(255, 79, 163, 0.3) 44%, rgba(91, 124, 255, 0.34) 56%, transparent 72%);
+}
+.tarot-card:hover .card-sheen, .tarot-card:focus-visible .card-sheen { opacity: 1; }
+.card-front { box-shadow: inset 0 0 0 2px var(--hue, var(--glow)), 0 0 40px -6px var(--hue, var(--glow)), 0 14px 34px -14px rgba(0, 0, 0, 0.8); }
+
+/* ───────── Ruta ───────── */
+.ruta-ghost {
+  position: absolute; left: 0; top: 50%; translate: 0 -50%; margin: 0; z-index: 0; pointer-events: none; white-space: nowrap;
+  font-family: var(--font-display-stack); font-weight: 800; letter-spacing: -0.04em; line-height: 1;
+  font-size: clamp(8rem, 26vw, 24rem); color: transparent; -webkit-text-stroke: 2px rgba(91, 124, 255, 0.28);
+}
+.ruta-track { z-index: 1; }
+.stop-num { -webkit-text-stroke-color: rgba(255, 124, 196, 0.85); filter: drop-shadow(0 0 18px rgba(255, 79, 163, 0.45)); }
+@media (max-width: 899.98px), (prefers-reduced-motion: reduce) { .ruta-ghost { display: none; } }
+
+/* ───────── Batazo ───────── */
+.batazo-flash { position: absolute; inset: -20px; z-index: 4; border-radius: 30px; pointer-events: none; opacity: 0; visibility: hidden; background: radial-gradient(circle, rgba(255, 255, 255, 0.55), rgba(255, 79, 163, 0.3) 40%, transparent 70%); }
+.batazo-worry {
+  background: radial-gradient(circle at 30% 28%, rgba(255, 255, 255, 0.34), rgba(255, 79, 163, 0.1) 45%, rgba(91, 124, 255, 0.34));
+  box-shadow: inset 0 0 0 2px rgba(253, 240, 250, 0.5), 0 0 34px -10px rgba(91, 124, 255, 0.8), 0 18px 40px -20px rgba(0, 0, 0, 0.8);
+}
+.batazo-worry.is-smashed { color: #fff; background: var(--grad-hair); text-shadow: 0 1px 10px rgba(18, 16, 58, 0.5); box-shadow: 0 0 44px -4px rgba(255, 79, 163, 0.85), 0 0 90px -20px rgba(91, 124, 255, 0.8); }
+
+/* ───────── Muro ───────── */
+.muro-board {
+  background:
+    radial-gradient(circle at 18% 12%, rgba(255, 79, 163, 0.22), transparent 42%),
+    radial-gradient(circle at 86% 88%, rgba(91, 124, 255, 0.26), transparent 46%),
+    rgba(12, 11, 50, 0.55);
+}
+.nota { box-shadow: 0 18px 34px -14px rgba(0, 0, 0, 0.75), 0 0 28px -10px rgba(255, 79, 163, 0.5); }
+
+/* ───────── Final: rayos de sol ───────── */
+.sun-rays {
+  position: absolute; inset: -55%; border-radius: 50%; pointer-events: none;
+  background: repeating-conic-gradient(from 0deg, rgba(255, 255, 255, 0.34) 0 4deg, transparent 4deg 14deg);
+  -webkit-mask-image: radial-gradient(circle, #000 6%, transparent 60%); mask-image: radial-gradient(circle, #000 6%, transparent 60%);
+}
+.finale-title { filter: drop-shadow(0 0 30px rgba(255, 255, 255, 0.6)); }
+
+/* ───────── Libro y modal con los colores nuevos ───────── */
+.cover-title { text-shadow: 0 0 26px rgba(255, 79, 163, 0.7); }
+.modal { box-shadow: inset 0 0 0 2px var(--rose), 0 0 80px -10px rgba(255, 79, 163, 0.55), 0 30px 80px -20px rgba(0, 0, 0, 0.9); }
+.vn-name { color: #fff; text-shadow: 0 1px 8px rgba(18, 16, 58, 0.5); }
+.cd-cell { box-shadow: 0 0 34px -10px rgba(255, 79, 163, 0.7); }
+
+@media (prefers-reduced-motion: reduce) {
+  .embers { display: none; }
+  .aurora i { opacity: 0.3; }
+}
