@@ -7,7 +7,7 @@
   position: fixed; inset: 0; z-index: -4;
   background: linear-gradient(180deg, var(--sky-a) 0%, var(--sky-b) 100%);
 }
-.stars { position: fixed; inset: 0; z-index: -3; pointer-events: none; }
+.stars { display: none; position: fixed; inset: 0; z-index: -3; pointer-events: none; }
 .stars i { position: absolute; inset: 0; background-size: 480px 480px; opacity: 0.25; animation: twinkle 5s ease-in-out infinite; will-change: opacity; }
 .stars .stars-b { animation-duration: 7s; animation-delay: -3s; background-position: 190px 110px; }
 

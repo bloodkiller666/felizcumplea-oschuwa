@@ -28,18 +28,21 @@ export default function Gba({ active, onExit }: { active: boolean; onExit: () =>
   const { contextSafe } = useGSAP({ scope: root });
 
   const power = contextSafe(() => {
-    sfx.power();
+    sfx.gbaBoot();
     setPhase("boot");
     if (prefersReducedMotion()) {
       setPhase("title");
       return;
     }
+    // Como la consola de verdad: pantalla clara, el logo baja desde arriba y se asienta, un destello de colores lo recorre
+    // y suena la campanita. Luego todo se desvanece.
     gsap
       .timeline({ onComplete: () => setPhase("title") })
-      .fromTo(".gba-boot", { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.2 })
-      .fromTo(".gba-boot strong", { y: -90, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 1, ease: "bounce.out" })
-      .fromTo(".gba-boot small", { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.5 }, "-=0.2")
-      .to({}, { duration: 0.9 });
+      .fromTo(".gba-boot", { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.3, ease: "none" })
+      .fromTo(".gb-mark", { yPercent: -330 }, { yPercent: 0, duration: 1.05, ease: "power2.out" }, 0.1)
+      .fromTo(".gb-logo", { backgroundPosition: "100% 0" }, { backgroundPosition: "0% 0", duration: 0.95, ease: "power1.inOut" }, 1.25)
+      .fromTo(".gb-copy", { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.4 }, 1.4)
+      .to(".gba-boot", { autoAlpha: 0, duration: 0.45, ease: "none" }, 3.15);
   });
 
   useGSAP(
@@ -98,8 +101,11 @@ export default function Gba({ active, onExit }: { active: boolean; onExit: () =>
 
           {phase === "boot" && (
             <div className="gba-boot" aria-hidden="true">
-              <strong>SHAKE ADVANCE</strong>
-              <small>© Motoperro Games</small>
+              <div className="gb-mark">
+                <strong className="gb-logo">GAME BOY</strong>
+                <b className="gb-sub">ADVANCE</b>
+              </div>
+              <small className="gb-copy">© Motoperro Games</small>
             </div>
           )}
 

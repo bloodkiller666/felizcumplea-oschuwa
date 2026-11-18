@@ -1,0 +1,37 @@
+/* ───────── Modos de rendimiento (ver lib/perf.ts) ─────────
+   .lite  → PCs modestas o sin gráfica: quita lo que obliga a redibujar sin parar.
+   .ultra → además quita sombras y brillos del decorado y la animación va a 30 fps. */
+
+html.lite .grain,
+html.lite .vignette::after { display: none; }
+
+/* Sin parpadeos, sin hue-rotate y sin giros eternos: así una imagen quieta no cuesta nada. */
+html.lite .neon-pad,
+html.lite .wall-neon,
+html.lite .rgb-glow,
+html.lite .tower-fan,
+html.lite .keys,
+html.lite .flame,
+html.lite .pc-power,
+html.lite .pc-toast { animation: none !important; }
+
+/* Los filtros (drop-shadow) son lo más caro de dibujar por software: se cambian por trazos simples. */
+html.lite .neon-pad { filter: none; stroke-width: 9; }
+html.lite .nsw { filter: none; }
+html.lite .cake-svg { filter: none; }
+html.lite .rgb-glow { box-shadow: none; opacity: 0.8; }
+
+/* Mínimo: sin sombras ni resplandores en el decorado y en los aparatos. */
+html.ultra .world *,
+html.ultra .world *::before,
+html.ultra .world *::after { box-shadow: none !important; text-shadow: none !important; }
+html.ultra .world .rgb-glow { box-shadow: none !important; }
+html.ultra .room-note-card { box-shadow: 0 0 0 2px rgba(255, 184, 107, 0.55); }
+
+/* Mínimo: el piso (un plano enorme en perspectiva) es lo más caro de dibujar sin gráfica. Se sustituye por el fondo del
+   escenario: todo lo que no tapa la pared es "piso", así que se ve igual de plano sin cambiar nada al moverse. */
+html.ultra .stage { background: linear-gradient(180deg, #2a1340 0 42%, #55303f 42% 100%); }
+html.ultra .floor,
+html.ultra .hall-floor { display: none; }
+
+html.ultra .tod { display: none; }

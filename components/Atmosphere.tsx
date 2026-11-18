@@ -67,7 +67,6 @@ export default function Atmosphere() {
         <i className="stars-a" style={{ backgroundImage: TILE_A }} />
         <i className="stars-b" style={{ backgroundImage: TILE_B }} />
       </div>
-      <FairyLights />
       <div className="grain" />
     </div>
   );

@@ -2,7 +2,7 @@
 
 import { sfx } from "@/lib/sfx";
 
-import { useRef, useState, type CSSProperties, type PointerEvent as RPointerEvent } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as RPointerEvent } from "react";
 import { gsap, useGSAP, prefersReducedMotion } from "@/lib/gsap";
 import { burst } from "@/lib/fx";
 import { bake } from "@/lib/room";
@@ -77,19 +77,31 @@ export default function Switch({ onExit }: { onExit: () => void }) {
   const { contextSafe } = useGSAP({ scope: root });
 
   const stir = useRef({ on: false, last: 0, acc: 0 });
+  const spoonPhase = useRef({ v: 0 });
   const bakeTween = useRef<gsap.core.Tween | null>(null);
   const bar = useRef<HTMLDivElement>(null);
+  const [clock, setClock] = useState("--:--");
+  useEffect(() => {
+    const tick = () => setClock(new Date().toLocaleTimeString("es", { hour: "2-digit", minute: "2-digit", hour12: false }));
+    tick();
+    const id = window.setInterval(tick, 20000);
+    return () => window.clearInterval(id);
+  }, []);
   const batter = added.filter(Boolean).length / 3;
 
   const power = contextSafe(() => {
-    sfx.power();
+    sfx.switchBoot();
     setPhase("boot");
     if (prefersReducedMotion()) return setPhase("home");
+    // Pantalla negra; los dos Joy-Con (azul y rojo) entran desde los lados, se juntan con un clic y aparece el nombre.
     gsap
       .timeline({ onComplete: () => setPhase("home") })
-      .fromTo(".nsw-boot", { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.2 })
-      .fromTo(".nsw-boot strong", { y: -60, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.9, ease: "bounce.out" })
-      .to({}, { duration: 0.8 });
+      .fromTo(".nsw-boot", { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.3, ease: "none" })
+      .fromTo(".sw-jc-l", { xPercent: -260, autoAlpha: 0 }, { xPercent: 0, autoAlpha: 1, duration: 0.7, ease: "power3.out" }, 0.25)
+      .fromTo(".sw-jc-r", { xPercent: 260, autoAlpha: 0 }, { xPercent: 0, autoAlpha: 1, duration: 0.7, ease: "power3.out" }, 0.25)
+      .fromTo(".sw-mark", { scale: 1 }, { scale: 1.07, duration: 0.14, yoyo: true, repeat: 1, ease: "power2.out" }, 0.9)
+      .fromTo(".nsw-boot strong", { autoAlpha: 0, y: 10 }, { autoAlpha: 1, y: 0, duration: 0.7, ease: "power2.out" }, 1.15)
+      .to(".nsw-boot", { autoAlpha: 0, duration: 0.4, ease: "none" }, 3.1);
   });
 
   useGSAP(
@@ -139,10 +151,16 @@ export default function Switch({ onExit }: { onExit: () => void }) {
     if (d > Math.PI) d -= Math.PI * 2;
     if (d < -Math.PI) d += Math.PI * 2;
     s.last = a;
-    gsap.set(".bk-spoon", { rotation: `+=${(d * 180) / Math.PI}` });
+    spoonPhase.current.v += d;
+    moveSpoon();
     s.acc += Math.abs(d);
     bumpStir(Math.min(1, s.acc / (Math.PI * 6)));
   });
+  // La cuchara está de lado, así que "dar vueltas" se ve como un sube y baja sobre su mismo eje (con un balanceo leve).
+  const moveSpoon = () => {
+    const v = spoonPhase.current.v;
+    gsap.set(".bk-spoon", { yPercent: Math.sin(v) * 9, xPercent: Math.cos(v) * 22, rotation: Math.cos(v) * 6 });
+  };
   const bumpStir = (v: number) => {
     setStirred((p) => {
       const n = Math.max(p, v);
@@ -155,7 +173,7 @@ export default function Switch({ onExit }: { onExit: () => void }) {
   };
   const stirClick = contextSafe(() => {
     stir.current.acc += Math.PI * 0.8;
-    gsap.to(".bk-spoon", { rotation: "+=140", duration: 0.35, ease: "power2.out" });
+    gsap.to(spoonPhase.current, { v: "+=" + Math.PI * 2, duration: 0.6, ease: "power2.out", onUpdate: moveSpoon });
     bumpStir(Math.min(1, stir.current.acc / (Math.PI * 6)));
   });
 
@@ -217,9 +235,11 @@ export default function Switch({ onExit }: { onExit: () => void }) {
   });
 
   const spoon = (
-    <svg className="bk-spoon" viewBox="0 0 100 100" aria-hidden="true">
-      <rect x="47" y="8" width="6" height="52" rx="3" fill="#a8642f" />
-      <ellipse cx="50" cy="70" rx="12" ry="16" fill="#c98a4f" />
+    <svg className="bk-spoon" viewBox="0 0 40 150" aria-hidden="true">
+      <rect x="16" y="0" width="8" height="104" rx="4" fill="#a8642f" />
+      <rect x="18" y="5" width="2.5" height="94" rx="1.2" fill="#c98a4f" />
+      <ellipse cx="20" cy="118" rx="17" ry="27" fill="#c98a4f" />
+      <ellipse cx="20" cy="118" rx="12" ry="21" fill="#b9763c" />
     </svg>
   );
 
@@ -237,6 +257,10 @@ export default function Switch({ onExit }: { onExit: () => void }) {
 
         {phase === "boot" && (
           <div className="nsw-boot" aria-hidden="true">
+            <div className="sw-mark">
+              <i className="sw-jc sw-jc-l"><b /></i>
+              <i className="sw-jc sw-jc-r"><b /></i>
+            </div>
             <strong>{bake.logo}</strong>
           </div>
         )}
@@ -244,7 +268,7 @@ export default function Switch({ onExit }: { onExit: () => void }) {
         {phase === "home" && (
           <div className="nsw-home">
             <header>
-              <span>23:52</span>
+              <span>{clock}</span>
               <span className="nsw-batt" aria-hidden="true" />
             </header>
             <ul className="nsw-tiles">
@@ -291,6 +315,8 @@ export default function Switch({ onExit }: { onExit: () => void }) {
               )}
 
               {step === 2 && (
+                <div className="bk-stirwrap">
+                  {spoon}
                 <div
                   className="bk-bowl bk-bowl-stir"
                   role="button"
@@ -304,8 +330,8 @@ export default function Switch({ onExit }: { onExit: () => void }) {
                   onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), stirClick())}
                 >
                   <i className="bk-fill" style={{ "--v": 1 } as CSSProperties} />
-                  {spoon}
                   <span className="bk-prog" style={{ "--p": stirred } as CSSProperties} aria-hidden="true" />
+                </div>
                 </div>
               )}
 

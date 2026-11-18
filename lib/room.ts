@@ -7,9 +7,9 @@ export type StationId = "pc" | "gba" | "tama" | "switch";
 
 /* Medidas del cuarto (px del mundo): el piso, el techo, la pared del fondo y su ancho. */
 export const FLOOR = 720;
-export const CEIL = -780;
+export const CEIL = -1480; // borde de arriba de la pared: ya no hay techo visible, la pared cubre toda la pantalla
 export const WALL_Z = -520;
-export const WALL_W = 5600;
+export const WALL_W = 6000;
 
 /*
   Dónde está cada aparato. `k` es la escala a la que se ve en el cuarto (una consola es pequeña sobre un estante);
@@ -55,20 +55,38 @@ export const stranger = {
   body: "No sé quién soy y no importa. Solo vine a preguntar algo: ¿ya recibiste tus regalos esta noche? Márcalos.",
 };
 
-export const chat = [
-  { user: "Pankoki", text: "¡Holichiwa~, jefa! Entré primero para apartarte el mejor lugar del chat.", tone: "blue" },
-  { user: "ShakeGang_01", text: "¡FELIZ CUMPLE! ¡Shake! ¡Gang!", tone: "rose" },
-  { user: "Motoperro_fan", text: "Avisen al tomate que sigue exiliado. Orden de arriba.", tone: "amber" },
-  { user: "Siesta_Oficial", text: "Hoy se duerme sin alarma. Es ley.", tone: "lilac" },
-  { user: "Warden_Slayer", text: "Todavía contamos cómo le ganaste a un Warden a puñetazos. Leyenda.", tone: "rose" },
-  { user: "Anónimo", text: "Gracias por las risas de este año. Sé que este mes no fue fácil.", tone: "lilac" },
-  { user: "Pankoki", text: "Si necesitas un hiatus, tómalo. Yo me quedo cuidando el chat… y hablando solo.", tone: "blue" },
-  { user: "Cuenta_Nueva_44", text: "Se nos hace un nudo en la garganta, pero lo entendemos.", tone: "amber" },
-  { user: "ShakeGang_01", text: "Vuelve cuando quieras, aunque sea una vez al mes. Con que aparezcas, ya es fiesta.", tone: "rose" },
-  { user: "Siesta_Oficial", text: "(Y no, no vamos a dejar de pedirte un «Holichiwa~» en los comentarios, que lo sepas.)", tone: "lilac" },
-  { user: "Pankoki", text: "Bueno, basta de llorar, que se me corre el rímel y ni maquillaje uso.", tone: "blue" },
-  { user: "Mod_Salmón", text: "¡Pide un deseo, jefa! Las velitas ya están prendidas.", tone: "amber" },
-] as const;
+/*
+  El chat del stream (simulación de Twitch). Los nombres son de cinco tipos: Pankoki#N y MotoPapu#N (el número cambia al azar
+  cada vez), PankokiMod, PankokiVIP y PankokiSUB. Algunos mensajes traen una donación que sale en el panel de la izquierda.
+*/
+export type ChatKind = "pankoki" | "papu" | "mod" | "vip" | "sub";
+export type Donation =
+  | { type: "bits"; amount: number }
+  | { type: "sub"; tier: 1 | 2 | 3; months: number; gift?: number }
+  | { type: "kofi"; amount: number };
+
+export const chatNames: Record<ChatKind, { base: string; numbered: boolean; color: string }> = {
+  pankoki: { base: "Pankoki", numbered: true, color: "#ff8fb4" },
+  papu: { base: "MotoPapu", numbered: true, color: "#ffb86b" },
+  mod: { base: "PankokiMod", numbered: false, color: "#2fd46b" },
+  vip: { base: "PankokiVIP", numbered: false, color: "#ff5fd0" },
+  sub: { base: "PankokiSUB", numbered: false, color: "#b48cff" },
+};
+
+export const chat: { kind: ChatKind; text: string; donation?: Donation }[] = [
+  { kind: "pankoki", text: "¡Holichiwa~, jefa! Entré primero para apartarte el mejor lugar del chat." },
+  { kind: "papu", text: "¡FELIZ CUMPLE! ¡Shake! ¡Gang!", donation: { type: "bits", amount: 500 } },
+  { kind: "papu", text: "Avisen al tomate que sigue exiliado. Orden de arriba." },
+  { kind: "sub", text: "Hoy se duerme sin alarma. Es ley.", donation: { type: "sub", tier: 1, months: 14 } },
+  { kind: "pankoki", text: "Todavía contamos cómo le ganaste a un Warden a puñetazos. Leyenda." },
+  { kind: "vip", text: "Gracias por las risas de este año. Sé que este mes no fue fácil.", donation: { type: "kofi", amount: 5 } },
+  { kind: "mod", text: "Si necesitas un hiatus, tómalo. Yo me quedo cuidando el chat… y hablando solo." },
+  { kind: "papu", text: "Se nos hace un nudo en la garganta, pero lo entendemos.", donation: { type: "bits", amount: 1000 } },
+  { kind: "sub", text: "Vuelve cuando quieras, aunque sea una vez al mes. Con que aparezcas, ya es fiesta.", donation: { type: "sub", tier: 1, months: 14, gift: 5 } },
+  { kind: "vip", text: "(Y no, no vamos a dejar de pedirte un «Holichiwa~» en los comentarios, que lo sepas.)" },
+  { kind: "pankoki", text: "Bueno, basta de llorar, que se me corre el rímel y ni maquillaje uso.", donation: { type: "bits", amount: 100 } },
+  { kind: "mod", text: "¡Pide un deseo, jefa! Las velitas ya están prendidas.", donation: { type: "kofi", amount: 10 } },
+];
 
 export const farewell = {
   title: "Feliz cumpleaños… y hasta pronto",
@@ -81,36 +99,33 @@ export const farewell = {
     "Gracias por cada risa, cada siesta transmitida sin querer y cada vez que defendiste la esperanza cuando costaba. Te queremos. Mucho más de lo que cabe en un chat.",
   ],
   sign: "— Shake Gang, con el corazón hecho nudo y un pastel a medias",
-  cta: "Ver los créditos",
-};
-
-export const credits: { role: string; name: string }[] = [
-  { role: "Dirección de cariño", name: "Shake Gang" },
-  { role: "Estrella del stream", name: "ShuraHiwa" },
-  { role: "Siestas y puñetazos a Wardens", name: "ShuraHiwa" },
-  { role: "Mascota oficial y guardia de la silla", name: "Motoperro" },
-  { role: "Jefe del exilio de tomates", name: "Pankoki" },
-  { role: "Voz de «¡Shake!» y «¡Gang!»", name: "Todo el chat" },
-  { role: "Postre", name: "Horneado por ti, en la Switch" },
-  { role: "Salmón ahumado", name: "El proveedor de siempre" },
-  { role: "Música de fondo", name: "Un «Holichiwa~» muy bajito" },
-  { role: "Con todo el cariño de", name: "Quienes te queremos" },
-];
-
-export const save = {
-  title: "Guardar partida",
-  slot: "Archivo 1 · ShuraHiwa",
-  stats: ["Nivel: un año más de camino", "Tiempo de juego: toda una noche", "Compañeros: Shake Gang, Pankoki y Motoperro"],
-  cta: "Guardar",
-  saved: "¡Partida guardada!",
-  cont: "Continuar…",
-  note: "Cuando quieras volver, aquí estaremos.",
+  cta: "Apagar PC",
 };
 
 export const ending = {
-  title: "Hasta pronto, ShuraHiwa",
-  text: "El stream no se apaga. Solo espera a que amanezca.",
+  title: "Fin",
+  text: "Hasta pronto, ShuraHiwa. El cuarto te esperará cuando quieras volver.",
   again: "Volver a entrar al cuarto",
+};
+
+/* ───────── La puerta: al entrar y al salir ───────── */
+export const DOOR_Z = 3600; // la pared de la puerta, detrás de quien mira la vista general (el pasillo queda más allá)
+export const DOOR_W = 360;
+export const DOOR_TOP = 100; // la puerta va del piso (y = 720) hasta aquí
+
+export const doorIntro = {
+  text: "Esta es mi habitación y mi set-up, mi lugar feliz. O bueno solía serlo",
+  cta: "Aceptar",
+};
+
+export const doorOutro = {
+  title: "Antes de salir",
+  body: [
+    "Hubo un tiempo en que este cuarto lo era todo para mí: las risas, las siestas, las noches largas con el chat.",
+    "Hoy cierro la puerta, no para olvidarlo, sino para cuidarme. Descansar también es una forma de seguir.",
+    "Me llevo cada «Holichiwa~» conmigo. Gracias por haber estado aquí.",
+  ],
+  cta: "Aceptar",
 };
 
 /* ───────── Switch · hornear el postre ───────── */
@@ -129,4 +144,22 @@ export const bake = {
   done: "¡Pastel listo!",
   doneText: "Se lo llevamos a la fiesta de esta noche.",
   exit: "Salir de la Switch",
+};
+
+/* ───────── Secretos del cuarto (se tocan desde la vista general) ───────── */
+export type SecretFx = "wiggle" | "hop" | "twinkle";
+export type SecretId = "teddy" | "bunny" | "star" | "basket" | "mirror" | "giant" | "plant" | "window";
+export const secrets: { id: SecretId; label: string; text: string; fx: SecretFx; snd: "secret" | "squeak" | "hop" | "twinkle" }[] = [
+  { id: "teddy", label: "Osito de peluche", text: "Se llama Señor Abrazos. Ha guardado más secretos míos que cualquier persona.", fx: "wiggle", snd: "secret" },
+  { id: "bunny", label: "Conejito", text: "Dice que hoy toca sonreír, aunque sea un ratito.", fx: "hop", snd: "hop" },
+  { id: "star", label: "Lámpara de estrella", text: "Se encendió una estrella. Pide un deseo, que este cuarto sí escucha.", fx: "twinkle", snd: "twinkle" },
+  { id: "basket", label: "Canasta de juguetes", text: "¡Chirrido! Todavía queda un juguete que suena.", fx: "wiggle", snd: "squeak" },
+  { id: "mirror", label: "Espejo del armario", text: "El espejo dice: hoy te ves feliz. (Y no miente.)", fx: "twinkle", snd: "twinkle" },
+  { id: "giant", label: "Peluche gigante", text: "Reservado para los abrazos largos, de los que arreglan días enteros.", fx: "wiggle", snd: "secret" },
+  { id: "plant", label: "Planta", text: "Creció un poquito esta semana. Como tú, sin hacer ruido.", fx: "wiggle", snd: "secret" },
+  { id: "window", label: "Ventana", text: "La luna siempre se asoma por aquí. Sabe que este es tu lugar.", fx: "twinkle", snd: "twinkle" },
+];
+export const secretsDone = {
+  title: "Los encontraste todos",
+  text: "Los 8 secretos del cuarto. Siempre fue tuyo, y siempre vas a poder volver.",
 };

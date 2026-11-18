@@ -4,13 +4,13 @@ import { sfx } from "@/lib/sfx";
 
 import { useEffect, useRef, useState } from "react";
 import { gsap, useGSAP, prefersReducedMotion } from "@/lib/gsap";
-import { burst, confettiRain } from "@/lib/fx";
+import { burst } from "@/lib/fx";
 import { gifts, giftFinalLabel, donationQuestion, donationOptions, kofiUrl } from "@/lib/content";
-import { stranger, chat, farewell, credits, save } from "@/lib/room";
+import { stranger, chat, chatNames, farewell, type ChatKind, type Donation } from "@/lib/room";
 import Cake from "./Cake";
 
 /*
-  El final de la PC (capítulo 2): regalos del desconocido → chat del stream → pastel → despedida → créditos → guardado.
+  El final de la PC (capítulo 2): regalos del desconocido → chat del stream → pastel → despedida (y "Apagar PC").
   Cada pieza avisa con un callback cuando termina; PcStation las encadena.
 */
 
@@ -192,41 +192,192 @@ export function GiftsWindow({ onDone }: { onDone: () => void }) {
   );
 }
 
-/* ───────── 2 · El chat del stream ───────── */
+/* ───────── 2 · El stream (simulación de Twitch): cámara y donaciones a la izquierda, chat a la derecha ───────── */
+const rnd = (n: number) => 1 + Math.floor(Math.random() * n);
+
+/** "Pankoki#37", "MotoPapu#8", "PankokiMod"… (el número se sortea cada vez). */
+const nameOf = (k: ChatKind) => (chatNames[k].numbered ? `${chatNames[k].base}#${rnd(99)}` : chatNames[k].base);
+
+function Badge({ kind }: { kind: ChatKind }) {
+  if (kind === "mod")
+    return (
+      <svg className="tw-badge" viewBox="0 0 18 18" aria-label="Moderador"><rect width="18" height="18" rx="3" fill="#00ad03" /><path d="M6 12.5 12.5 6M10.5 5.5l2 2M5.5 10.5l2 2" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" /></svg>
+    );
+  if (kind === "vip")
+    return (
+      <svg className="tw-badge" viewBox="0 0 18 18" aria-label="VIP"><rect width="18" height="18" rx="3" fill="#e005b9" /><path d="M9 3.5 14 8l-5 6.5L4 8Z" fill="#fff" /></svg>
+    );
+  if (kind === "sub")
+    return (
+      <svg className="tw-badge" viewBox="0 0 18 18" aria-label="Suscriptor"><rect width="18" height="18" rx="3" fill="#9146ff" /><path d="m9 3.4 1.7 3.7 4 .4-3 2.7.9 3.9L9 12 5.4 14.1l.9-3.9-3-2.7 4-.4Z" fill="#fff" /></svg>
+    );
+  return null;
+}
+
+const Gem = () => (
+  <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2 17 8l-7 10L3 8Z" fill="#9146ff" /><path d="M3 8h14M7 8l3-6 3 6-3 10Z" stroke="#e3d4ff" strokeWidth="1.2" fill="none" strokeLinejoin="round" /></svg>
+);
+const Star = () => (
+  <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m10 2 2.4 5.2 5.6.6-4.2 3.8 1.2 5.6L10 14.4 5 17.2l1.2-5.6L2 7.8l5.6-.6Z" fill="#b48cff" /></svg>
+);
+const Cup = () => (
+  <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 7h11v5a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z" fill="#29abe0" /><path d="M14 8h1.5a2.5 2.5 0 0 1 0 5H14" fill="none" stroke="#29abe0" strokeWidth="1.8" /><path d="M6 3v2M9 3v2M12 3v2" stroke="#9ad9f5" strokeWidth="1.4" strokeLinecap="round" /></svg>
+);
+
+type DonEvent = Donation & { user: string; id: number };
+const donationText = (d: DonEvent) =>
+  d.type === "bits"
+    ? `donó ${d.amount.toLocaleString("es")} bits`
+    : d.type === "kofi"
+      ? `te invitó un café en Ko-fi · $${d.amount}`
+      : d.gift
+        ? `regaló ${d.gift} suscripciones`
+        : `se suscribió (Nivel ${d.tier}) · ${d.months} meses`;
+const DonIcon = ({ d }: { d: Donation }) => (d.type === "bits" ? <Gem /> : d.type === "kofi" ? <Cup /> : <Star />);
+
+/* Una cámara de streamer dibujada: cuarto con neón, ella con audífonos y un micrófono. Parpadea de vez en cuando. */
+function CamArt() {
+  return (
+    <svg className="tw-art" viewBox="0 0 320 180" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <defs>
+        <linearGradient id="tw-bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#2b1740" /><stop offset="1" stopColor="#6a3f8c" /></linearGradient>
+      </defs>
+      <rect width="320" height="180" fill="url(#tw-bg)" />
+      <g opacity="0.35" stroke="#ff7aa8" strokeWidth="1.4" fill="none"><circle cx="24" cy="26" r="6" /><path d="M300 20l6 10h-12Z" /><path d="M70 150l8 8M78 150l-8 8" /><circle cx="290" cy="118" r="6" /></g>
+      <path d="M205 40c-8 0-14 6-14 14 0 10 8 16 18 16 5 0 8-3 10-8h30c2 5 5 8 10 8 10 0 18-6 18-16 0-8-6-14-14-14Z" fill="none" stroke="#ffd2ea" strokeWidth="3" strokeLinejoin="round" opacity="0.9" />
+      <text x="26" y="48" fontFamily="var(--font-hand-stack)" fontSize="22" fontWeight="700" fill="#ffe3f0" opacity="0.9">Shake Gang</text>
+      <rect x="0" y="150" width="320" height="30" fill="#1d1124" />
+      <rect x="40" y="148" width="130" height="5" rx="2" fill="#3b2a45" />
+      <ellipse cx="160" cy="176" rx="82" ry="20" fill="#3a2a5c" />
+      <path d="M96 178c4-34 28-50 64-50s60 16 64 50Z" fill="#ff7aa8" />
+      <rect x="148" y="110" width="24" height="22" rx="8" fill="#f2c4a8" />
+      <path d="M104 86c0-30 22-48 56-48s56 18 56 48c0 6-1 12-3 16-12-26-30-34-53-34s-41 8-53 34c-2-4-3-10-3-16Z" fill="#2a1a3a" />
+      <ellipse cx="160" cy="96" rx="46" ry="48" fill="#f7d3bd" />
+      <path d="M112 78c10-24 30-32 48-32s38 8 48 32c-14-12-30-18-48-18s-34 6-48 18Z" fill="#2a1a3a" />
+      <g className="tw-eyes"><ellipse cx="143" cy="98" rx="4.5" ry="6" fill="#2a1329" /><ellipse cx="177" cy="98" rx="4.5" ry="6" fill="#2a1329" /><circle cx="141.5" cy="95.5" r="1.6" fill="#fff" /><circle cx="175.5" cy="95.5" r="1.6" fill="#fff" /></g>
+      <circle cx="132" cy="112" r="7" fill="#ff9fbf" opacity="0.5" /><circle cx="188" cy="112" r="7" fill="#ff9fbf" opacity="0.5" />
+      <path d="M150 116q10 9 20 0" stroke="#7a3d5c" strokeWidth="3" fill="none" strokeLinecap="round" />
+      <path d="M108 100V84a52 52 0 0 1 104 0v16" fill="none" stroke="#3a2a5c" strokeWidth="7" strokeLinecap="round" />
+      <rect x="98" y="92" width="18" height="30" rx="8" fill="#ffb86b" /><rect x="204" y="92" width="18" height="30" rx="8" fill="#ffb86b" />
+      <path d="M104 118q6 22 40 24" fill="none" stroke="#3a2a5c" strokeWidth="3" strokeLinecap="round" />
+      <circle cx="146" cy="142" r="6" fill="#1d1124" />
+    </svg>
+  );
+}
+
 export function ChatWindow({ onDone }: { onDone: () => void }) {
   const [n, setN] = useState(0);
+  const [alertEv, setAlertEv] = useState<DonEvent | null>(null);
+  const [events, setEvents] = useState<DonEvent[]>([]);
+  const [viewers, setViewers] = useState(1243);
   const done = useRef(onDone);
   done.current = onDone;
+  // Los nombres (y sus números) se sortean una sola vez, al abrir el stream.
+  const names = useRef<string[]>(chat.map((m) => nameOf(m.kind)));
+  const listRef = useRef<HTMLOListElement>(null);
 
   useEffect(() => {
     const quick = prefersReducedMotion();
     const id = window.setInterval(() => {
       sfx.pop();
       setN((v) => Math.min(chat.length, v + 1));
-    }, quick ? 250 : 1500);
+    }, quick ? 250 : 1700);
     return () => clearInterval(id);
   }, []);
+
+  // Cada mensaje con donación la anuncia en la cámara y la suma al panel.
   useEffect(() => {
-    if (n < chat.length) return;
-    const t = window.setTimeout(() => done.current(), 2200);
+    if (n < 1 || n > chat.length) return;
+    const d = chat[n - 1].donation;
+    setViewers((v) => v + rnd(30) - 6);
+    if (!d) return;
+    const ev: DonEvent = { ...d, user: names.current[n - 1], id: n };
+    sfx.ding();
+    setAlertEv(ev);
+    setEvents((list) => [ev, ...list]);
+    const t = window.setTimeout(() => setAlertEv(null), prefersReducedMotion() ? 900 : 2600);
     return () => clearTimeout(t);
   }, [n]);
 
+  useEffect(() => {
+    const el = listRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [n]);
+
+  useEffect(() => {
+    if (n < chat.length) return;
+    const t = window.setTimeout(() => done.current(), 3200);
+    return () => clearTimeout(t);
+  }, [n]);
+
+  const totals = events.reduce(
+    (a, e) => ({
+      bits: a.bits + (e.type === "bits" ? e.amount : 0),
+      subs: a.subs + (e.type === "sub" ? e.gift ?? 1 : 0),
+      kofi: a.kofi + (e.type === "kofi" ? e.amount : 0),
+    }),
+    { bits: 0, subs: 0, kofi: 0 }
+  );
+
   return (
-    <div className="ch">
-      <header className="ch-head">
-        <span className="ch-live"><i /> EN VIVO</span>
-        <b>Stream de cumpleaños</b>
-        <span className="ch-count">chat</span>
-      </header>
-      <ol className="ch-list" aria-live="polite" aria-label="Chat del stream">
-        {chat.slice(0, n).map((m, i) => (
-          <li key={i} className="ch-msg">
-            <b className={`tone-${m.tone}`}>{m.user}</b>
-            <span>{m.text}</span>
-          </li>
-        ))}
-      </ol>
+    <div className="tw">
+      <section className="tw-left">
+        <div className="tw-cam" aria-label="Cámara del stream">
+          <CamArt />
+          <div className="tw-cam-top">
+            <span className="tw-live">EN VIVO</span>
+            <span className="tw-viewers"><i aria-hidden="true" />{viewers.toLocaleString("es")}</span>
+          </div>
+          <div className="tw-cam-bot">
+            <b>ShuraHiwa</b>
+            <span>Stream de cumpleaños · Just Chatting</span>
+          </div>
+          {alertEv && (
+            <div className="tw-alert" key={alertEv.id} role="status">
+              <span className={`tw-alert-ic ev-${alertEv.type}`}><DonIcon d={alertEv} /></span>
+              <span><b>{alertEv.user}</b> {donationText(alertEv)}</span>
+            </div>
+          )}
+        </div>
+
+        <div className="tw-don">
+          <header className="tw-don-head">
+            <b>Donaciones y suscripciones</b>
+            <span className="tw-chips">
+              <span className="ev-bits"><Gem />{totals.bits.toLocaleString("es")}</span>
+              <span className="ev-sub"><Star />{totals.subs}</span>
+              <span className="ev-kofi"><Cup />${totals.kofi}</span>
+            </span>
+          </header>
+          <ul className="tw-don-list" aria-live="polite" aria-label="Donaciones">
+            {events.length === 0 && <li className="tw-don-empty">Esperando la primera donación…</li>}
+            {events.map((e) => (
+              <li key={e.id} className={`tw-ev ev-${e.type}`}>
+                <span className="tw-ev-ic"><DonIcon d={e} /></span>
+                <span className="tw-ev-tx"><b>{e.user}</b> {donationText(e)}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      <section className="tw-chat" aria-label="Chat del stream">
+        <header className="tw-chat-head">CHAT DE LA TRANSMISIÓN</header>
+        <ol className="tw-list" ref={listRef} aria-live="polite">
+          {chat.slice(0, n).map((m, i) => (
+            <li key={i} className="tw-msg">
+              <Badge kind={m.kind} />
+              <b style={{ color: chatNames[m.kind].color }}>{names.current[i]}</b>
+              <span className="tw-colon">:</span>
+              <span className="tw-text">{m.text}</span>
+            </li>
+          ))}
+        </ol>
+        <div className="tw-input" aria-hidden="true">
+          <span>Envía un mensaje</span>
+          <i>Chat</i>
+        </div>
+      </section>
     </div>
   );
 }
@@ -280,6 +431,7 @@ export function CakeWindow({ onDone }: { onDone: () => void }) {
     if (prefersReducedMotion()) {
       gsap.set(".plate", { autoAlpha: 1 });
       gsap.set(".slice", { y: 56, scale: 0.8, transformOrigin: "50% 100%" });
+      gsap.set(".candles", { autoAlpha: 0 });
       return void gsap.delayedCall(1, onDone);
     }
     busy.current = true;
@@ -287,6 +439,8 @@ export function CakeWindow({ onDone }: { onDone: () => void }) {
       .timeline()
       .set(".knife", { y: -40, autoAlpha: 1, transformOrigin: "50% 0%" })
       .to(".knife", { y: 8, duration: 0.55, ease: "power3.in" })
+      // las velitas se van apagando y desvaneciendo al paso del cuchillo (del centro hacia afuera)
+      .to(".candle", { autoAlpha: 0, y: 16, scale: 0.6, transformOrigin: "50% 100%", duration: 0.3, stagger: { each: 0.07, from: "center" }, ease: "power2.in" }, "<0.18")
       .to(".knife", { autoAlpha: 0, y: -30, duration: 0.4, ease: "power2.out" })
       .to(".slice-a", { x: -10, duration: 0.4, ease: "power2.out" }, "<0.1")
       .to(".slice-c", { x: 10, duration: 0.4, ease: "power2.out" }, "<")
@@ -372,109 +526,6 @@ export function FarewellWindow({ onDone }: { onDone: () => void }) {
           </button>
         </div>
       )}
-    </div>
-  );
-}
-
-/* ───────── 5 · Créditos del stream ───────── */
-export function Credits({ onDone }: { onDone: () => void }) {
-  const root = useRef<HTMLDivElement>(null);
-  const finished = useRef(false);
-  const end = () => {
-    if (finished.current) return;
-    finished.current = true;
-    onDone();
-  };
-
-  useGSAP(
-    () => {
-      if (prefersReducedMotion()) {
-        gsap.delayedCall(3, end);
-        return;
-      }
-      gsap.fromTo(".cr-roll", { yPercent: 100 }, { yPercent: -100, duration: 30, ease: "none", onComplete: end });
-      confettiRain(60);
-    },
-    { scope: root }
-  );
-
-  return (
-    <div className="cr" ref={root}>
-      <div className="cr-roll">
-        <h3>Créditos del stream</h3>
-        {credits.map((c) => (
-          <p key={c.role + c.name}>
-            <small>{c.role}</small>
-            <b>{c.name}</b>
-          </p>
-        ))}
-        <h3 className="cr-end">Gracias por todo, jefa</h3>
-      </div>
-      <button type="button" className="btn btn-ghost cr-skip" onClick={end} data-nofx>
-        Saltar
-      </button>
-    </div>
-  );
-}
-
-/* ───────── 6 · Guardar partida ───────── */
-export function SaveScreen({ onSaved }: { onSaved: () => void }) {
-  const root = useRef<HTMLDivElement>(null);
-  const [state, setState] = useState<"ask" | "saving" | "saved">("ask");
-  const { contextSafe } = useGSAP({ scope: root });
-
-  useGSAP(
-    () => {
-      gsap.from(".sv-card", { autoAlpha: 0, y: 24, scale: 0.96, duration: 0.8, ease: "power3.out" });
-    },
-    { scope: root }
-  );
-
-  const doSave = contextSafe(() => {
-    sfx.click();
-    setState("saving");
-    gsap.delayedCall(prefersReducedMotion() ? 0.2 : 1.6, () => {
-      sfx.save();
-      setState("saved");
-      gsap.delayedCall(prefersReducedMotion() ? 0.5 : 3, onSaved);
-    });
-  });
-
-  useGSAP(
-    () => {
-      if (state === "saved") gsap.from(".sv-saved > *", { autoAlpha: 0, y: 10, stagger: 0.2, duration: 0.6 });
-      if (state === "saving") gsap.to(".sv-disk", { rotation: 360, duration: 1.2, repeat: -1, ease: "none" });
-    },
-    { dependencies: [state], scope: root }
-  );
-
-  return (
-    <div className="sv" ref={root}>
-      <div className="sv-card">
-        {state !== "saved" ? (
-          <>
-            <h3>{save.title}</h3>
-            <p className="sv-slot">{save.slot}</p>
-            <ul>
-              {save.stats.map((s) => (
-                <li key={s}>{s}</li>
-              ))}
-            </ul>
-            <button type="button" className="btn btn-go" onClick={doSave} disabled={state === "saving"} data-nofx autoFocus>
-              {state === "saving" ? <i className="sv-disk" aria-hidden="true" /> : null}
-              {state === "saving" ? "Guardando…" : save.cta}
-            </button>
-          </>
-        ) : (
-          <div className="sv-saved" role="status">
-            <h3>{save.saved}</h3>
-            <button type="button" className="btn btn-ghost" disabled>
-              {save.cont}
-            </button>
-            <p>{save.note}</p>
-          </div>
-        )}
-      </div>
     </div>
   );
 }

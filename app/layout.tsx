@@ -5,6 +5,7 @@ import "./extras.css";
 import "./cozy.css";
 import "./room.css";
 import "./world.css";
+import "./lite.css";
 
 // Fraunces (serif blanda, con el eje SOFT) para los títulos; Caveat para lo "escrito a mano"; Figtree para leer.
 const display = Fraunces({ subsets: ["latin"], variable: "--font-display", axes: ["opsz", "SOFT"], display: "swap" });

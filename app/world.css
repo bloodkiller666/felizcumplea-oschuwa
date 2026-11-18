@@ -9,8 +9,8 @@
 
 /* ───────── Pared ───────── */
 .wall {
-  width: 5600px; height: 1500px; transform: translate3d(0, -30px, -520px) translate(-50%, -50%);
-  background: linear-gradient(180deg, #3a1c52 0%, #55307a 55%, #6a3f8c 100%);
+  width: 6000px; height: 2200px; transform: translate3d(0, -380px, -520px) translate(-50%, -50%);
+  background: linear-gradient(180deg, #2a1340 0%, #3a1c52 30%, #55307a 72%, #6a3f8c 100%);
 }
 .wall > * { position: absolute; }
 .wall-pattern {
@@ -43,7 +43,7 @@
 /* ───────── Techo, piso y alfombra ───────── */
 .ceiling { width: 5600px; height: 2400px; transform: translate3d(0, -780px, -520px) rotateX(90deg) translate(-50%, 0); background: linear-gradient(180deg, #1a0c20, #2c1636 60%, #3a1d46); }
 .ceil-lamp { position: absolute; left: 50%; top: 34%; width: 900px; height: 420px; translate: -50% -50%; border-radius: 50%; background: radial-gradient(ellipse, #fff1df 0 36%, #ffc27a 37% 50%, #ff8fb0 51% 62%, transparent 64%); box-shadow: 0 0 120px 40px rgba(255, 150, 120, 0.4); transition: opacity 2.4s; }
-.floor { width: 5600px; height: 3000px; transform: translate3d(0, 720px, -520px) rotateX(90deg) translate(-50%, 0); background: repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.22) 0 3px, transparent 3px 190px), repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.12) 0 2px, transparent 2px 420px), linear-gradient(180deg, #3a1a2a 0%, #6a3640 45%, #8a4a42 100%); }
+.floor { width: 6000px; height: 4120px; transform: translate3d(0, 720px, -520px) rotateX(90deg) translate(-50%, 0); background: repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.22) 0 3px, transparent 3px 190px), repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.12) 0 2px, transparent 2px 420px), linear-gradient(180deg, #3a1a2a 0%, #6a3640 45%, #8a4a42 100%); }
 .rug { position: absolute; left: calc(50% - 100px); top: 560px; width: 1700px; height: 900px; translate: -50% 0; border-radius: 40px; background: linear-gradient(135deg, #5b3fb8, #3d2a8a); box-shadow: inset 0 0 0 16px #ffb86b, inset 0 0 0 30px #3d2a8a, inset 0 0 0 36px rgba(255, 241, 223, 0.5), 0 30px 60px rgba(0, 0, 0, 0.45); }
 
 /* ───────── Cama y mesita ───────── */
@@ -80,3 +80,53 @@
 @media (prefers-reduced-motion: reduce) {
   .neon-pad, .wall-neon, .rgb-strip, .tower-fan, .keys { animation: none; }
 }
+
+/* ───────── La puerta (y el pasillo de afuera) ─────────
+   La pared de la puerta está en z = 3600 (DOOR_Z): de ese lado el pasillo, del otro el cuarto. La hoja gira con --door (grados). */
+.door-set { transform-style: preserve-3d; }
+.door-set > * { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+.dw { background: #2b1d49; }
+.dw-l, .dw-r { background-image: linear-gradient(180deg, transparent calc(100% - 70px), #4d3670 calc(100% - 70px) calc(100% - 64px), #231640 calc(100% - 64px)); }
+.door-frame { box-sizing: border-box; border: 18px solid #5a3322; border-bottom: 0; border-radius: 14px 14px 0 0; box-shadow: 0 0 0 4px #3a2016, inset 0 0 0 3px rgba(255, 190, 120, 0.25); }
+.door-leaf { position: absolute; left: 0; top: 0; transform-origin: 0 0; background: linear-gradient(160deg, #c46a4a, #8c4630); border-radius: 6px 6px 0 0; box-shadow: inset 0 0 0 6px #a85a3c, inset 0 0 0 9px rgba(0, 0, 0, 0.18), 0 0 40px rgba(0, 0, 0, 0.4); }
+.door-panel { position: absolute; border-radius: 8px; background: linear-gradient(160deg, #9c5236, #7a3b27); box-shadow: inset 0 0 0 4px rgba(0, 0, 0, 0.22), inset 3px 3px 0 rgba(255, 255, 255, 0.12); }
+.dp-a { left: 9%; top: 6%; width: 38%; height: 40%; } .dp-b { right: 9%; top: 6%; width: 38%; height: 40%; }
+.dp-c { left: 9%; bottom: 6%; width: 38%; height: 40%; } .dp-d { right: 9%; bottom: 6%; width: 38%; height: 40%; }
+.door-knob { position: absolute; right: 7%; top: 52%; width: 26px; height: 26px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff1c2, #f0b84a 55%, #a8741c); box-shadow: 0 3px 6px rgba(0, 0, 0, 0.5); }
+.door-plaque { display: grid; place-items: center; width: 300px; height: 96px; border-radius: 12px; font: 700 34px/1.05 var(--font-hand-stack); text-align: center; color: #ffe3f0; background: #2a1c47; box-shadow: inset 0 0 0 4px #ff7aa8, 0 0 30px rgba(255, 122, 168, 0.45); text-shadow: 0 0 10px #ff7aa8; backface-visibility: hidden; padding: 6px 18px; box-sizing: border-box; }
+.door-lamp { width: 70px; height: 110px; border-radius: 36px 36px 10px 10px; background: radial-gradient(circle at 50% 35%, #fff1c2, #ffb86b 55%, #c47a2a); box-shadow: 0 0 80px 40px rgba(255, 184, 107, 0.35); }
+.hall-floor { width: 6000px; height: 1400px; transform: translate3d(0, 720px, 3600px) rotateX(90deg) translate(-50%, 0); background: repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.2) 0 3px, transparent 3px 190px), linear-gradient(180deg, #6a3640 0%, #3a1a2a 100%); }
+.hall-mat { position: absolute; left: 50%; top: 120px; width: 520px; height: 260px; translate: -50% 0; border-radius: 22px; background: #ffb86b; box-shadow: inset 0 0 0 14px #e0589c, inset 0 0 0 24px #ffb86b, 0 14px 30px rgba(0, 0, 0, 0.4); }
+.hall-back { width: 6000px; height: 2200px; transform: translate3d(0, -380px, 5500px) translate(-50%, -50%); background: #140c20; }
+.door-set .door-leaf, .door-set .door-frame, .door-set .dw { transition: filter 3s; }
+
+.side-wall { width: 4120px; height: 2200px; background-image: linear-gradient(180deg, transparent calc(100% - 54px), #5a3050 calc(100% - 54px)), linear-gradient(180deg, #2a1340 0%, #3a1c52 30%, #55307a 72%, #6a3f8c 100%); }
+
+/* ───────── Qué se dibuja en cada momento (menos capas = más fps en PCs sin gráfica) ─────────
+   hall: solo el pasillo (puerta cerrada) · room: solo el cuarto · both: la puerta abierta o cerrándose */
+.stage[data-zone="hall"] :is(.wall, .floor, .side-wall, .prop, .st) { visibility: hidden; }
+.stage[data-zone="room"] :is(.door-set) { visibility: hidden; }
+
+/* Más cuadros de la pared (a los extremos del cuarto) */
+.p4 { background: linear-gradient(160deg, #ffb86b, #ff7aa8); rotate: 2deg; } .p4::after { content: "♡"; font-size: 90px; }
+.p5 { background: linear-gradient(160deg, #c9a8ff, #5b3fb8); rotate: -3deg; font-size: 38px; } .p5::after { content: "¡Uwu!"; }
+
+/* ───────── Hora real: el cuarto cambia de luz según el reloj del dispositivo (la noche es el aspecto base) ───────── */
+.tod { position: absolute; inset: 0; z-index: 2; pointer-events: none; opacity: 0; transition: opacity 3s ease-in-out, background-color 3s ease-in-out; }
+.stage[data-tod="day"] .tod { opacity: 1; background: rgba(255, 228, 175, 0.16); }
+.stage[data-tod="dusk"] .tod { opacity: 1; background: rgba(255, 122, 92, 0.14); }
+.stage[data-tod="day"] .wall-window { background: linear-gradient(180deg, #6bb6f0, #bfe3ff 68%, #eaf7ff); box-shadow: 0 0 0 16px #6a3b57, 0 0 160px 30px rgba(255, 236, 170, 0.28); }
+.stage[data-tod="day"] .wall-window .sun { top: 10%; right: 20%; background: #fff3a6; box-shadow: 0 0 0 16px rgba(255, 238, 150, 0.32), 0 0 70px rgba(255, 230, 120, 0.9); }
+.stage[data-tod="day"] .wall-window .blinds { transform: scaleY(0.16); transition: none; }
+.stage[data-tod="dusk"] .wall-window { background: linear-gradient(180deg, #4b3a86, #d9628c 58%, #ffb86b); }
+.stage[data-tod="dusk"] .wall-window .sun { top: 56%; background: #ffd9a0; box-shadow: 0 0 0 14px rgba(255, 190, 120, 0.25), 0 0 60px rgba(255, 170, 100, 0.8); }
+.stage[data-tod="dusk"] .wall-window .blinds { transform: scaleY(0.5); transition: none; }
+.stage[data-tod="day"] .lamp-glow { opacity: 0.12; }
+.stage[data-tod="day"] .wall-neon, .stage[data-tod="day"] .neon-pad { opacity: 0.55; }
+.wall-clock { width: 100%; height: 100%; display: block; overflow: visible; }
+
+/* ───────── Secretos ───────── */
+.stage.is-look .prop.secret, .stage.is-look .wall-window.secret { pointer-events: auto; cursor: pointer; }
+.stage.is-look .prop.secret { transition: filter 0.2s; }
+.stage.is-look .prop.secret:hover, .stage.is-look .prop.secret:focus-visible { filter: brightness(1.18) drop-shadow(0 0 18px rgba(255, 214, 140, 0.9)); outline: none; }
+.stage.is-look .wall-window.secret:hover { filter: brightness(1.15); }

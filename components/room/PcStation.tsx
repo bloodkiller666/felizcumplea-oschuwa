@@ -6,11 +6,11 @@ import { useEffect, useRef, useState } from "react";
 import { gsap, useGSAP, prefersReducedMotion } from "@/lib/gsap";
 import { pcCopy, stranger } from "@/lib/room";
 import TarotWindow from "./TarotWindow";
-import { GiftsWindow, ChatWindow, CakeWindow, FarewellWindow, Credits, SaveScreen } from "./PcEnding";
+import { GiftsWindow, ChatWindow, CakeWindow, FarewellWindow } from "./PcEnding";
 
 export type PcState =
   | "off" | "boot" | "desktop" | "msg" | "tarot"
-  | "stranger" | "gifts" | "chat" | "cake" | "farewell" | "credits" | "save";
+  | "stranger" | "gifts" | "chat" | "cake" | "farewell" | "shutdown" | "down";
 
 const PowerIcon = () => (
   <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true">
@@ -30,7 +30,7 @@ const TITLES: Partial<Record<PcState, string>> = {
   Capítulo 1: se enciende con un clic, "arranca" (BIOS → logo → escritorio), recibe un mensaje que hay que abrir con el mouse
   y termina en la tirada de tarot. Al salir no se apaga.
   Capítulo 2 (al volver de la Switch): la cámara "entra" sola en la pantalla y llega un mensaje de un desconocido con los tres regalos;
-  después el chat del stream, el pastel, la despedida, los créditos y el guardado.
+  después el chat del stream, el pastel y la despedida, que termina con el botón "Apagar PC": la pantalla se apaga y la cámara sale hacia la puerta.
 */
 export default function PcStation({
   initial = "off",
@@ -57,7 +57,7 @@ export default function PcStation({
 
   // Capítulo 2: al llegar la cámara, el aviso del desconocido se abre solo (sin botones).
   useEffect(() => {
-    if (chapter !== 2 || !active || started2.current) return;
+    if (chapter !== 2 || !active || started2.current || ["chat", "cake", "farewell"].includes(initial)) return; // (en desarrollo, ?pc=farewell salta directo al final)
     started2.current = true;
     sfx.ding();
     setState("stranger");
@@ -121,15 +121,30 @@ export default function PcStation({
     gsap.to(".pc-win", { autoAlpha: 0, scale: 0.94, duration: 0.3, onComplete: () => setState("tarot") });
   });
 
-  const lit = state !== "off";
-  const onDesktop = state !== "off" && state !== "boot";
-  const overlay = state === "credits" || state === "save";
+  // Apagar: la pantalla se va a negro con una barrita y avisa a la cámara para que salga del escritorio.
+  // (con setTimeout y no con gsap: lo llama la despedida, y su contexto de GSAP se limpia al desmontarse)
+  const shutDown = () => {
+    sfx.click();
+    setState("shutdown");
+    const quick = prefersReducedMotion();
+    window.setTimeout(() => {
+      sfx.power();
+      setState("down");
+      window.setTimeout(onEnding, quick ? 200 : 1100);
+    }, quick ? 300 : 2400);
+  };
+
+  const lit = state !== "off" && state !== "down";
+  const onDesktop = state !== "off" && state !== "boot" && state !== "down";
+  const overlay = state === "shutdown";
 
   return (
     <div className={`monitor${lit ? " is-on" : ""}`} ref={root}>
       <div className="rgb-glow" aria-hidden="true" />
       <div className="bezel">
         <div className="pcscreen" data-focus data-nofx>
+          {state === "down" && <div className="pc-off pc-down" aria-hidden="true" />}
+
           {state === "off" && (
             <div className="pc-off">
               <button type="button" className="btn btn-lg pc-power" onClick={powerOn}>
@@ -225,12 +240,16 @@ export default function PcStation({
                   {state === "gifts" && <GiftsWindow onDone={() => setState("chat")} />}
                   {state === "chat" && <ChatWindow onDone={() => setState("cake")} />}
                   {state === "cake" && <CakeWindow onDone={() => setState("farewell")} />}
-                  {state === "farewell" && <FarewellWindow onDone={() => setState("credits")} />}
+                  {state === "farewell" && <FarewellWindow onDone={shutDown} />}
                 </div>
               )}
 
-              {state === "credits" && <Credits onDone={() => setState("save")} />}
-              {state === "save" && <SaveScreen onSaved={onEnding} />}
+              {state === "shutdown" && (
+                <div className="pc-shutdown" role="status">
+                  <strong>Apagando…</strong>
+                  <span className="pc-bar"><i /></span>
+                </div>
+              )}
 
               {!overlay && (
                 <footer className="pc-taskbar" aria-hidden="true">
