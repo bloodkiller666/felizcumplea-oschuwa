@@ -1,8 +1,8 @@
 import confetti from "canvas-confetti";
 import { gsap } from "./gsap";
 
-// Rosa y azul del cabello, magenta del neón, rojo de los ojos y blanco del vendaje.
-export const PALETTE = ["#FF4FA3", "#FF7CC4", "#5B7CFF", "#A99BFF", "#E5174F", "#FFFFFF"];
+// Ámbar de lámpara, rosa y azul del cabello, durazno y crema.
+export const PALETTE = ["#FFB86B", "#FF7AA8", "#7C93FF", "#C9A8FF", "#FFC9B3", "#FFF1DF"];
 
 const pick = <T,>(list: T[]): T => list[Math.floor(Math.random() * list.length)];
 
@@ -69,11 +69,3 @@ export function starCannon(x = 0.5, y = 0.6) {
   confetti({ ...FULL, particleCount: 60, spread: 360, startVelocity: 38, origin: { x, y }, shapes: [star], colors: PALETTE, scalar: 1.6, ticks: 220 });
 }
 
-/** Fuegos artificiales de resurrección: suben y estallan en rosa y azul. */
-export function fireworks(duration = 3200) {
-  const end = Date.now() + duration;
-  const id = setInterval(() => {
-    if (Date.now() > end) return clearInterval(id);
-    confetti({ ...FULL, particleCount: 40, startVelocity: 30, spread: 360, ticks: 70, origin: { x: Math.random() * 0.8 + 0.1, y: Math.random() * 0.4 + 0.1 }, colors: PALETTE });
-  }, 260);
-}

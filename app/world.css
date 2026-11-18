@@ -1,0 +1,82 @@
+/* ───────── El cuarto: pared, piso, techo y muebles ─────────
+   Mundo CSS 3D (ver components/room/Scene.tsx). x → derecha, y → abajo, z → hacia quien mira.
+   Piso en y = 720, techo en y = -780, pared del fondo en z = -520 (5600 px de ancho). */
+
+.world > .prop { pointer-events: none; }
+.prop svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.prop-near { transition: opacity 0.7s; }
+.stage[data-focus] .prop-near { opacity: 0; }
+
+/* ───────── Pared ───────── */
+.wall {
+  width: 5600px; height: 1500px; transform: translate3d(0, -30px, -520px) translate(-50%, -50%);
+  background: linear-gradient(180deg, #3a1c52 0%, #55307a 55%, #6a3f8c 100%);
+}
+.wall > * { position: absolute; }
+.wall-pattern {
+  inset: 0; opacity: 0.9;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='260' height='260' fill='none' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><g stroke='%23ff7aa8' opacity='.32'><circle cx='40' cy='40' r='11'/><path d='M180 30 l14 24 h-28Z'/></g><g stroke='%237c93ff' opacity='.34'><path d='M120 120 l22 22 M142 120 l-22 22'/><rect x='200' y='170' width='22' height='22' rx='3'/></g><g stroke='%23ffb86b' opacity='.3'><path d='M40 180 q-14 0 -14 14 q0 12 10 12 q6 0 9 -7 h18 q3 7 9 7 q10 0 10 -12 q0 -14 -14 -14Z'/></g><path d='M130 215 v18 M121 224 h18' stroke='%23c9a8ff' opacity='.3'/></svg>");
+  background-size: 260px 260px;
+}
+.wall-base { left: 0; right: 0; bottom: 0; height: 54px; background: linear-gradient(180deg, #7a4a6b, #5a3050); box-shadow: 0 -4px 0 rgba(255, 255, 255, 0.08); }
+
+.wall-window { border-radius: 14px; overflow: hidden; background: linear-gradient(180deg, #14103e, #3b2c78); box-shadow: 0 0 0 16px #6a3b57, 0 0 140px 20px rgba(255, 184, 107, 0.1); }
+.wall-window .sun { position: absolute; right: 16%; top: 14%; width: 64px; height: 64px; border-radius: 50%; background: #fff1df; box-shadow: 0 0 0 14px rgba(255, 241, 223, 0.18), 0 0 50px rgba(255, 241, 223, 0.5); }
+.wall-window::after { content: ""; position: absolute; inset: 0; opacity: 0; transition: opacity 6s ease-in-out 1s; background: linear-gradient(180deg, #3b2c78 0%, #d9628c 55%, #ffb86b 85%, #ffe3b0 100%); }
+.wall-window .blinds { position: absolute; inset: 0; z-index: 2; transform-origin: top; transition: transform 5s ease-in-out 0.5s; background: repeating-linear-gradient(180deg, rgba(58, 32, 70, 0.78) 0 15px, rgba(20, 8, 26, 0.5) 15px 19px); border-bottom: 10px solid #6a3b57; }
+.wall-window .blinds::after { content: ""; position: absolute; right: 28px; top: 100%; width: 4px; height: 80px; background: #c9bfd6; box-shadow: 0 78px 0 3px #ffb86b; }
+.stage.is-dawn .wall-window::after { opacity: 1; }
+.stage.is-dawn .wall-window .blinds { transform: scaleY(0.18); }
+.stage.is-dawn .wall-window { box-shadow: 0 0 0 16px #6a3b57, 0 0 300px 90px rgba(255, 184, 107, 0.35); transition: box-shadow 6s ease-in-out 1s; }
+
+.neon-pad { display: block; width: 100%; height: 100%; fill: none; stroke: #ffd2ea; stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 6px #ff7aa8) drop-shadow(0 0 22px #e0589c) drop-shadow(0 0 54px #e0589c); animation: neon 6s ease-in-out infinite; }
+.wall-neon { display: grid; place-items: center; font-family: var(--font-hand-stack); font-weight: 700; font-size: 104px; line-height: 1; white-space: nowrap; color: #ffe3f0; text-shadow: 0 0 6px #ff7aa8, 0 0 22px #ff7aa8, 0 0 60px #e0589c, 0 0 120px #e0589c; animation: neon 5s ease-in-out infinite; }
+@keyframes neon { 0%, 100% { opacity: 1; } 46% { opacity: 1; } 48% { opacity: 0.55; } 50% { opacity: 1; } 52% { opacity: 0.7; } 54% { opacity: 1; } }
+.rgb-strip { border-radius: 52px; border: 5px solid #ff5fa8; box-shadow: 0 0 40px 6px #ff5fa8, 0 0 140px 20px rgba(255, 95, 168, 0.5), inset 0 0 60px rgba(255, 95, 168, 0.4); animation: rgb 9s linear infinite; }
+@keyframes rgb { to { filter: hue-rotate(360deg); } }
+.poster { display: grid; place-items: center; border-radius: 6px; box-shadow: 0 14px 30px rgba(0, 0, 0, 0.5); font-family: var(--font-display-stack); font-weight: 800; font-size: 44px; text-align: center; color: #fff1df; }
+.p1 { background: linear-gradient(160deg, #ff7aa8, #7c4bd6); rotate: -3deg; } .p1::after { content: "¡Shake!"; }
+.p2 { background: linear-gradient(160deg, #7c93ff, #3a2a8a); rotate: 3deg; } .p2::after { content: "¡Gang!"; }
+.p3 { background: linear-gradient(160deg, #ffb86b, #e0589c); rotate: -2deg; font-size: 34px; } .p3::after { content: "Holichiwa~"; }
+.light-switch { border-radius: 8px; background: #e9dff0; box-shadow: inset 0 0 0 4px #c9bfd6; }
+
+/* ───────── Techo, piso y alfombra ───────── */
+.ceiling { width: 5600px; height: 2400px; transform: translate3d(0, -780px, -520px) rotateX(90deg) translate(-50%, 0); background: linear-gradient(180deg, #1a0c20, #2c1636 60%, #3a1d46); }
+.ceil-lamp { position: absolute; left: 50%; top: 34%; width: 900px; height: 420px; translate: -50% -50%; border-radius: 50%; background: radial-gradient(ellipse, #fff1df 0 36%, #ffc27a 37% 50%, #ff8fb0 51% 62%, transparent 64%); box-shadow: 0 0 120px 40px rgba(255, 150, 120, 0.4); transition: opacity 2.4s; }
+.floor { width: 5600px; height: 3000px; transform: translate3d(0, 720px, -520px) rotateX(90deg) translate(-50%, 0); background: repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.22) 0 3px, transparent 3px 190px), repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.12) 0 2px, transparent 2px 420px), linear-gradient(180deg, #3a1a2a 0%, #6a3640 45%, #8a4a42 100%); }
+.rug { position: absolute; left: calc(50% - 100px); top: 560px; width: 1700px; height: 900px; translate: -50% 0; border-radius: 40px; background: linear-gradient(135deg, #5b3fb8, #3d2a8a); box-shadow: inset 0 0 0 16px #ffb86b, inset 0 0 0 30px #3d2a8a, inset 0 0 0 36px rgba(255, 241, 223, 0.5), 0 30px 60px rgba(0, 0, 0, 0.45); }
+
+/* ───────── Cama y mesita ───────── */
+.lamp-glow { position: absolute; left: 50%; top: -30px; width: 460px; height: 460px; translate: -50% 0; border-radius: 50%; pointer-events: none; background: radial-gradient(circle, rgba(255, 196, 120, 0.4), transparent 66%); transition: opacity 2.4s; }
+
+/* ───────── Estante de las consolas ───────── */
+.shelf { position: absolute; border: 14px solid #ff5a8a; border-bottom-width: 0; border-radius: 8px 8px 0 0; background: #1a0e22; box-shadow: 0 0 60px rgba(255, 90, 138, 0.28), 0 30px 60px rgba(0, 0, 0, 0.5); }
+.shelf-lv { position: absolute; left: 0; right: 0; height: 223px; border-bottom: 14px solid #ff5a8a; background: linear-gradient(180deg, #170b1e, #2b1838); }
+.lv0 { top: 0; } .lv1 { top: 223px; } .lv2 { top: 446px; } .lv3 { top: 669px; }
+.shelf .deco { position: absolute; }
+
+/* ───────── Escritorio, torre, teclado y mueble ───────── */
+.desk-top { width: 1000px; height: 380px; background: linear-gradient(180deg, #e6dcef, #f7f0fa); box-shadow: inset 0 0 0 6px #d3c6e0; }
+.desk-edge { width: 1000px; height: 34px; background: linear-gradient(180deg, #cfc2dc, #b9aac9); border-radius: 0 0 6px 6px; }
+.desk-leg { width: 40px; height: 296px; background: linear-gradient(90deg, #e8dff0, #cfc2dc); }
+.drawers { display: grid; grid-template-rows: repeat(3, 1fr); gap: 8px; width: 240px; height: 296px; padding: 10px; background: #f2ecf7; border-radius: 0 0 8px 8px; box-shadow: inset 0 0 0 4px #d3c6e0; }
+.drawers i { position: relative; border-radius: 6px; background: #e0d6ea; box-shadow: inset 0 0 0 3px #c9bfd6; }
+.drawers i::after { content: ""; position: absolute; left: 50%; top: 50%; width: 60px; height: 10px; translate: -50% -50%; border-radius: 6px; background: #6a5a7a; }
+.keyboard { width: 360px; height: 120px; border-radius: 14px; background: #1d1124; box-shadow: 0 0 40px 6px rgba(255, 95, 168, 0.55); }
+.keys { position: absolute; inset: 12px; border-radius: 8px; background: repeating-linear-gradient(90deg, #3b2a45 0 20px, transparent 20px 24px), repeating-linear-gradient(0deg, transparent 0 20px, #1d1124 20px 24px), linear-gradient(90deg, #ff5fa8, #7c93ff, #3dbb7d, #ffb86b); background-blend-mode: normal; animation: rgb 8s linear infinite; }
+.tower { position: relative; width: 190px; height: 400px; padding: 16px; border-radius: 16px; background: linear-gradient(160deg, #2a1d36, #130b19); box-shadow: 0 0 0 3px #3b2a45, 0 0 50px rgba(255, 95, 168, 0.3); }
+.tower-glass { height: 100%; display: grid; align-content: space-evenly; justify-items: center; border-radius: 10px; background: linear-gradient(160deg, rgba(124, 147, 255, 0.12), rgba(255, 95, 168, 0.1)), #0c0612; }
+.tower-fan { display: block; width: 100px; height: 100px; border-radius: 50%; background: repeating-conic-gradient(rgba(255, 255, 255, 0.22) 0 16deg, transparent 16deg 45deg), conic-gradient(#ff5fa8, #7c93ff, #3dbb7d, #ffb86b, #ff5fa8); box-shadow: 0 0 22px rgba(255, 95, 168, 0.6), inset 0 0 0 8px #0c0612; animation: fan 2.4s linear infinite; }
+@keyframes fan { to { transform: rotate(360deg); } }
+.tower-led { position: absolute; right: 14px; bottom: 12px; width: 10px; height: 10px; border-radius: 50%; background: #7dffb0; box-shadow: 0 0 10px #7dffb0; }
+
+/* ───────── Amanecer: se apagan los neones y las lámparas ───────── */
+.wall-neon, .neon-pad, .rgb-strip { transition: opacity 2.4s ease-in-out; }
+.stage.is-dawn .wall-neon, .stage.is-dawn .neon-pad, .stage.is-dawn .rgb-strip, .stage.is-dawn .ceil-lamp, .stage.is-dawn .lamp-glow, .stage.is-dawn .rgb-glow { opacity: 0; animation: none; }
+.stage.is-dawn .tower-fan, .stage.is-dawn .keys { animation-play-state: paused; filter: brightness(0.35); transition: filter 2.4s; }
+.wall, .floor, .ceiling { transition: filter 3s ease-in-out; }
+.stage.is-dawn .wall, .stage.is-dawn .floor, .stage.is-dawn .ceiling { filter: brightness(0.6); }
+
+@media (prefers-reduced-motion: reduce) {
+  .neon-pad, .wall-neon, .rgb-strip, .tower-fan, .keys { animation: none; }
+}

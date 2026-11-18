@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { gsap, ScrollTrigger, useGSAP, prefersReducedMotion } from "@/lib/gsap";
+import { useEffect } from "react";
+import { prefersReducedMotion } from "@/lib/gsap";
 import { burst } from "@/lib/fx";
 
 function mulberry32(seed: number) {
@@ -15,210 +15,60 @@ function mulberry32(seed: number) {
   };
 }
 
-const rand = mulberry32(2026);
-const STARS = Array.from({ length: 90 }, () => ({
-  x: (rand() * 100).toFixed(2),
-  y: (rand() * 100).toFixed(2),
-  s: (1 + rand() * 2.2).toFixed(2),
-  d: (rand() * 6).toFixed(2),
-  t: (3 + rand() * 4).toFixed(2),
-}));
+// Las estrellas son DOS capas de fondo (una baldosa SVG repetida) en vez de decenas de elementos con su propia animación.
+function starTile(seed: number, n: number) {
+  const rand = mulberry32(seed);
+  const dots = Array.from({ length: n }, () => {
+    const r = (0.6 + rand() * 1.5).toFixed(2);
+    return `<circle cx='${(rand() * 480).toFixed(1)}' cy='${(rand() * 480).toFixed(1)}' r='${r}'/>`;
+  }).join("");
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='480' height='480' fill='white'>${dots}</svg>`;
+  return `url("data:image/svg+xml;utf8,${encodeURIComponent(svg)}")`;
+}
+const TILE_A = starTile(2026, 26);
+const TILE_B = starTile(1218, 22);
+
+const SPARK_COLORS = ["#ffb86b", "#ff7aa8", "#7c93ff", "#fff1df"];
+
+// Guirnalda de luces cálidas que cuelga del techo; cada foco parpadea con su propio ritmo (solo opacity).
+function FairyLights() {
+  const bulbs = Array.from({ length: 14 }, (_, i) => i);
+  return (
+    <div className="fairy">
+      <svg viewBox="0 0 1000 60" preserveAspectRatio="none" className="fairy-wire">
+        <path d="M0 4 Q 71 52 143 10 T 286 10 T 429 10 T 572 10 T 715 10 T 858 10 T 1000 6" fill="none" stroke="currentColor" strokeWidth="2" vectorEffect="non-scaling-stroke" />
+      </svg>
+      {bulbs.map((i) => (
+        <i key={i} className="bulb" style={{ left: (i + 0.5) * (100 / 14) + "%", top: (i % 2 ? 26 : 10) + "px", animationDelay: -i * 0.7 + "s" }} />
+      ))}
+    </div>
+  );
+}
 
 /*
-  Los cuatro actos del recorrido y cómo se siente cada uno.
-  0 inicio · 1 dolor · 2 reflexión · 3 resurrección · 4 futuro
-  dir: >0 cae (ceniza, lluvia) · <0 sube (brasas, chispas). Se mezcla de forma suave entre actos.
+  Lo que rodea al cuarto: cielo y estrellas (se ven por los bordes), la guirnalda de luces, el grano de la imagen
+  y unas chispas al tocar fuera de los aparatos.
 */
-export const ACTS = [
-  { name: "Inicio", a: "rgb(10,8,34)", b: "rgb(28,22,92)", au: ["rgb(255,79,163)", "rgb(91,124,255)", "rgb(216,59,210)"], dir: -0.25, speed: 0.3, alpha: 0.55, stars: 1, colors: ["#ff7cc4", "#5b7cff", "#ffffff"] },
-  { name: "Dolor", a: "rgb(12,6,30)", b: "rgb(84,10,66)", au: ["rgb(229,23,79)", "rgb(76,40,170)", "rgb(120,20,110)"], dir: 1, speed: 0.55, alpha: 0.5, stars: 0.5, colors: ["#e5174f", "#8b6cff", "#ff4fa3"] },
-  { name: "Reflexión", a: "rgb(8,10,52)", b: "rgb(30,50,160)", au: ["rgb(91,124,255)", "rgb(169,155,255)", "rgb(60,70,200)"], dir: -0.12, speed: 0.22, alpha: 0.7, stars: 1, colors: ["#5b7cff", "#a99bff", "#ffffff"] },
-  { name: "Resurrección", a: "rgb(46,8,90)", b: "rgb(205,46,155)", au: ["rgb(255,79,163)", "rgb(216,59,210)", "rgb(91,124,255)"], dir: -1, speed: 1.1, alpha: 0.85, stars: 0.5, colors: ["#ff4fa3", "#d83bd2", "#ffffff", "#ffa8dc"] },
-  { name: "Futuro", a: "rgb(76,40,150)", b: "rgb(255,124,196)", au: ["rgb(255,168,220)", "rgb(91,124,255)", "rgb(255,255,255)"], dir: -0.7, speed: 0.8, alpha: 0.95, stars: 0.25, colors: ["#ffffff", "#ffa8dc", "#5b7cff", "#ff7cc4"] },
-];
-
-type Ember = { x: number; y: number; r: number; v: number; ph: number; c: string };
-
-export default function Atmosphere({ stage }: { stage: number }) {
-  const glow = useRef<HTMLDivElement>(null);
-  const canvas = useRef<HTMLCanvasElement>(null);
-  const act = useRef(0);
-  const mix = useRef({ dir: ACTS[0].dir, speed: ACTS[0].speed, alpha: ACTS[0].alpha });
-  const palette = useRef<string[]>(ACTS[0].colors);
-  const [current, setCurrent] = useState(0);
-
-  const applyAct = (n: number, instant = false) => {
-    act.current = n;
-    setCurrent(n);
-    document.body.dataset.act = String(n);
-    const s = ACTS[n];
-    const duration = instant || prefersReducedMotion() ? 0 : 2.2;
-    gsap.to(".sky", { "--sky-a": s.a, "--sky-b": s.b, duration, ease: "power2.inOut", overwrite: "auto" });
-    gsap.to(".stars", { opacity: s.stars, duration, ease: "power2.inOut", overwrite: "auto" });
-    gsap.to(".aurora", { "--au-1": s.au[0], "--au-2": s.au[1], "--au-3": s.au[2], duration, ease: "power2.inOut", overwrite: "auto" });
-    gsap.to(mix.current, { dir: s.dir, speed: s.speed, alpha: s.alpha, duration: duration || 0.01, ease: "power2.inOut", overwrite: "auto" });
-    palette.current = s.colors;
-  };
-
-  // Etapa: portada = acto 0; el libro (dolor) arranca en el acto 1. El resto lo manda el scroll.
-  useGSAP(
-    () => {
-      applyAct(stage === 0 ? 0 : act.current || 1, stage === 0);
-    },
-    { dependencies: [stage] }
-  );
-
-  // Cada bloque [data-act] pinta el cielo del acto cuando ocupa el centro de la pantalla.
+export default function Atmosphere() {
   useEffect(() => {
-    if (stage === 0) return;
-    const triggers: ScrollTrigger[] = [];
-    const id = requestAnimationFrame(() => {
-      document.querySelectorAll<HTMLElement>("[data-act]").forEach((el) => {
-        triggers.push(
-          ScrollTrigger.create({
-            trigger: el,
-            start: "top 60%",
-            end: "bottom 60%",
-            onToggle: (self) => self.isActive && applyAct(Number(el.dataset.act)),
-          })
-        );
-      });
-    });
-    return () => {
-      cancelAnimationFrame(id);
-      triggers.forEach((t) => t.kill());
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stage]);
-
-  // Aurora a la deriva, barra de progreso y destello que sigue al cursor.
-  useEffect(() => {
-    document.fonts?.ready.then(() => ScrollTrigger.refresh());
-    const reduce = prefersReducedMotion();
-
-    const ctx = gsap.context(() => {
-      if (!reduce) {
-        gsap.utils.toArray<HTMLElement>(".aurora i").forEach((el, i) => {
-          gsap.to(el, { x: "random(-18,18)vw", y: "random(-14,14)vh", scale: "random(0.8,1.35)", duration: 11 + i * 3, ease: "sine.inOut", repeat: -1, yoyo: true, repeatRefresh: true });
-        });
-      }
-      gsap.to(".progress-fill", { scaleX: 1, ease: "none", scrollTrigger: { start: 0, end: "max", scrub: 0.25 } });
-    });
-
-    const fine = window.matchMedia("(pointer: fine)").matches;
-    const el = glow.current;
-    let onMove: ((e: PointerEvent) => void) | undefined;
-
-    if (fine && el && !reduce) {
-      const xTo = gsap.quickTo(el, "x", { duration: 0.7, ease: "power3" });
-      const yTo = gsap.quickTo(el, "y", { duration: 0.7, ease: "power3" });
-      onMove = (e) => {
-        xTo(e.clientX);
-        yTo(e.clientY);
-      };
-      window.addEventListener("pointermove", onMove);
-    }
-
     const onDown = (e: PointerEvent) => {
-      if (reduce) return;
-      if ((e.target as Element).closest("[data-nofx], input, textarea")) return;
-      burst(document.body, e.clientX, e.clientY, { count: 12, shape: "star", distance: 70, colors: palette.current });
+      if (prefersReducedMotion()) return;
+      if ((e.target as Element).closest("[data-nofx], input, textarea, button")) return;
+      burst(document.body, e.clientX, e.clientY, { count: 10, shape: "star", distance: 70, colors: SPARK_COLORS });
     };
     window.addEventListener("pointerdown", onDown);
-
-    return () => {
-      ctx.revert();
-      if (onMove) window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerdown", onDown);
-    };
-  }, []);
-
-  // Brasas / ceniza / chispas en canvas: sube, cae o flota según el acto.
-  useEffect(() => {
-    const cv = canvas.current;
-    if (!cv || prefersReducedMotion()) return;
-    const g = cv.getContext("2d");
-    if (!g) return;
-
-    let w = 0, h = 0;
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
-    const resize = () => {
-      w = window.innerWidth;
-      h = window.innerHeight;
-      cv.width = w * dpr;
-      cv.height = h * dpr;
-      g.setTransform(dpr, 0, 0, dpr, 0, 0);
-    };
-    resize();
-    window.addEventListener("resize", resize);
-
-    const count = window.innerWidth < 760 ? 38 : 80;
-    const pick = () => palette.current[Math.floor(Math.random() * palette.current.length)];
-    const parts: Ember[] = Array.from({ length: count }, () => ({
-      x: Math.random() * w, y: Math.random() * h, r: 0.8 + Math.random() * 2.6, v: 0.4 + Math.random() * 1.1, ph: Math.random() * 6.28, c: pick(),
-    }));
-
-    const draw = (time: number) => {
-      const { dir, speed, alpha } = mix.current;
-      g.clearRect(0, 0, w, h);
-      g.globalCompositeOperation = "lighter";
-      for (const p of parts) {
-        p.y += dir * speed * p.v * 1.6;
-        p.x += Math.sin(time * 0.7 + p.ph) * 0.35;
-        if (p.y < -12) { p.y = h + 12; p.x = Math.random() * w; p.c = pick(); }
-        if (p.y > h + 12) { p.y = -12; p.x = Math.random() * w; p.c = pick(); }
-        g.globalAlpha = alpha * (0.35 + 0.65 * Math.abs(Math.sin(time * 1.2 + p.ph)));
-        g.shadowBlur = 14;
-        g.shadowColor = p.c;
-        g.fillStyle = p.c;
-        g.beginPath();
-        g.arc(p.x, p.y, p.r, 0, 6.283);
-        g.fill();
-      }
-    };
-    gsap.ticker.add(draw);
-    return () => {
-      gsap.ticker.remove(draw);
-      window.removeEventListener("resize", resize);
-    };
+    return () => window.removeEventListener("pointerdown", onDown);
   }, []);
 
   return (
     <div aria-hidden="true">
       <div className="sky" />
-      <div className="aurora">
-        <i /><i /><i />
-      </div>
       <div className="stars">
-        {STARS.map((st, i) => (
-          <i
-            key={i}
-            className="star"
-            style={{
-              left: `${st.x}%`,
-              top: `${st.y}%`,
-              width: `${st.s}px`,
-              height: `${st.s}px`,
-              animationDelay: `${st.d}s`,
-              animationDuration: `${st.t}s`,
-            }}
-          />
-        ))}
+        <i className="stars-a" style={{ backgroundImage: TILE_A }} />
+        <i className="stars-b" style={{ backgroundImage: TILE_B }} />
       </div>
-      <canvas className="embers" ref={canvas} />
+      <FairyLights />
       <div className="grain" />
-      <div className="cursor-glow" ref={glow} />
-      <div className="progress"><div className="progress-fill" /></div>
-      {stage >= 1 && (
-        <ol className="rail">
-          {ACTS.slice(1).map((a, i) => (
-            <li key={a.name} className={current === i + 1 ? "on" : ""}>
-              <span>{a.name}</span>
-              <i />
-            </li>
-          ))}
-        </ol>
-      )}
     </div>
   );
 }

@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "app/extras.css"
+        ],
+        "createdAt": "2026-11-01T19:26:33.651Z",
+        "reason": "assistant: 3px inset seam where the two full-screen curtain-transition halves meet, not a card/callout border; user did not review"
+      }
+    ]
+  }
+}

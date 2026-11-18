@@ -1,8 +1,0 @@
-Coloca aquí los PNG de los personajes de la plática:
-
-  pankoki.png      (el personaje que consuela)
-  shurahiwa.png    (ShuraHiwa, quien elige las respuestas)
-
-Mejor si son PNG con fondo transparente y de cuerpo completo o medio cuerpo.
-Si el archivo no existe, la web muestra un marcador con la inicial del personaje.
-Las rutas se pueden cambiar en lib/dialogue.ts (objeto "characters").
